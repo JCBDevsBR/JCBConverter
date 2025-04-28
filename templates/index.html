@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>🎵 JCB Audio Converter</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet">
+
+  <!-- Bootstrap Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    rel="stylesheet">
+
+  <style>
+    /* Drag & Drop Zone */
+    #dropZone {
+      border: 2px dashed #dee2e6;
+      border-radius: 1rem;
+      padding: 2rem;
+      background: rgba(13, 110, 253, 0.05);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    #dropZone.dragover {
+      border-color: #0d6efd;
+      background: rgba(13, 110, 253, 0.1);
+    }
+
+    /* Feature Cards Hover */
+    .feature-card {
+      transition: transform 0.2s;
+    }
+    .feature-card:hover {
+      transform: translateY(-5px);
+    }
+
+    /* Dark Mode */
+    .dark-mode {
+      background-color: #1a1a1a;
+      color: #ffffff;
+    }
+    .dark-mode .card {
+      background-color: #2d2d2d;
+      border-color: #404040;
+    }
+  </style>
+</head>
+<body class="bg-light">
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg bg-white shadow-sm">
+    <div class="container">
+      <a class="navbar-brand fw-bold text-primary">
+        <i class="bi bi-soundwave me-2"></i>JCB Audio Converter
+      </a>
+      <button id="themeToggle" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-moon-stars-fill"></i>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <main class="container py-5">
+
+    <!-- Feature cards -->
+    <div class="row mb-5 g-4">
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm feature-card">
+          <div class="card-body text-center">
+            <i class="bi bi-magic fs-1 text-primary mb-3"></i>
+            <h5>Conversão Inteligente</h5>
+            <p class="text-muted">Converta vídeos do YouTube para WAV ou MP3</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm feature-card">
+          <div class="card-body text-center">
+            <i class="bi bi-sliders fs-1 text-primary mb-3"></i>
+            <h5>Ajustes Precisos</h5>
+            <p class="text-muted">Controle de tonalidade, velocidade e remoção de vocais</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm feature-card">
+          <div class="card-body text-center">
+            <i class="bi bi-lightning-charge fs-1 text-primary mb-3"></i>
+            <h5>Processamento Rápido</h5>
+            <p class="text-muted">Tecnologia de última geração para conversões ultrarrápidas</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conversion form -->
+    <form id="audioForm"
+          class="card border-0 shadow-lg"
+          action="{{ url_for('process_audio') }}"
+          method="post"
+          enctype="multipart/form-data">
+      <div class="card-body p-4">
+        <h3 class="text-center mb-4">Converter Áudio</h3>
+
+        <!-- Upload tabs -->
+        <ul class="nav nav-pills mb-4 justify-content-center" id="uploadTabs">
+          <li class="nav-item">
+            <button class="nav-link active" type="button"
+                    data-bs-toggle="pill" data-bs-target="#fileTab">
+              <i class="bi bi-upload me-2"></i>Arquivo
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" type="button"
+                    data-bs-toggle="pill" data-bs-target="#urlTab">
+              <i class="bi bi-youtube me-2"></i>YouTube
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+          <!-- File tab -->
+          <div class="tab-pane fade show active" id="fileTab">
+            <div id="dropZone" class="text-center mb-4">
+              <i class="bi bi-file-earmark-music fs-1 text-secondary"></i>
+              <div class="mt-2">Arraste seu arquivo aqui ou clique</div>
+              <small class="text-muted">MP3, WAV, AAC, OGG</small>
+              <input type="file"
+                     id="audioFile"
+                     name="audio"
+                     accept="audio/*"
+                     class="visually-hidden">
+            </div>
+          </div>
+
+          <!-- URL tab -->
+          <div class="tab-pane fade" id="urlTab">
+            <div class="mb-4">
+              <label class="form-label">URL do YouTube</label>
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="bi bi-link-45deg"></i>
+                </span>
+                <input type="url"
+                       name="audio_url"
+                       class="form-control"
+                       placeholder="https://youtube.com/..." >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sliders -->
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">
+              <i class="bi bi-music-note me-2"></i>Ajuste de Tom
+              <span class="badge bg-primary" id="pitchVal">0</span>
+            </label>
+            <input type="range"
+                   class="form-range"
+                   id="pitch"
+                   name="pitch_shift"
+                   min="-12" max="12" step="0.1" value="0">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">
+              <i class="bi bi-speedometer2 me-2"></i>Velocidade
+              <span class="badge bg-primary" id="tempoVal">1.0</span>
+            </label>
+            <input type="range"
+                   class="form-range"
+                   id="tempo"
+                   name="tempo_factor"
+                   min="0.5" max="2.0" step="0.1" value="1.0">
+          </div>
+        </div>
+
+        <!-- Vocals & format -->
+        <div class="row g-3 mt-3">
+          <div class="col-md-6">
+            <div class="form-check form-switch">
+              <input class="form-check-input"
+                     type="checkbox"
+                     id="stripVox"
+                     name="strip_vocals"
+                     value="yes">
+              <label class="form-check-label" for="stripVox">
+                <i class="bi bi-mic-mute me-2"></i>Remover Vocais
+              </label>
+            </div>
+          </div>
+          <div class="col-md-6 text-end">
+            <div class="btn-group" role="group">
+              <input type="radio"
+                     class="btn-check"
+                     name="output_format"
+                     id="formatWav"
+                     value="wav"
+                     checked>
+              <label class="btn btn-outline-primary" for="formatWav">WAV</label>
+
+              <input type="radio"
+                     class="btn-check"
+                     name="output_format"
+                     id="formatMp3"
+                     value="mp3">
+              <label class="btn btn-outline-primary" for="formatMp3">MP3</label>
+            </div>
+          </div>
+        </div>
+
+        <div id="progressContainer" class="progress mt-3 d-none">
+          <div id="uploadProgress"
+               class="progress-bar progress-bar-striped progress-bar-animated"
+               style="width: 0%">0%</div>
+        </div>
+
+        <!-- Submit & progress -->
+        <button type="submit"
+                id="processBtn"
+                class="btn btn-primary w-100 mt-4 py-3">
+          <i class="bi bi-gear me-2"></i>Converter Agora
+        </button>
+        <div id="progressContainer" class="progress mt-3 d-none">
+          <div id="uploadProgress"
+               class="progress-bar progress-bar-striped progress-bar-animated"
+               role="progressbar"
+               style="width: 0%"
+               aria-valuemin="0" aria-valuemax="100">
+            0%
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <!-- Footer -->
+    <footer class="mt-5 text-center text-muted">
+      <small>
+        © 2024 JCB Audio Converter.
+        <a href="#" class="text-muted">Termos</a> •
+        <a href="#" class="text-muted">Privacidade</a>
+      </small>
+    </footer>
+
+  </main>
+
+  <!-- Bootstrap JS Bundle -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // ===== Dark mode toggle =====
+      const themeToggle = document.getElementById('themeToggle');
+      themeToggle.addEventListener('click', () =>
+        document.body.classList.toggle('dark-mode')
+      );
+    
+      // ===== Slider labels =====
+      document.getElementById('pitch').addEventListener('input', e =>
+        document.getElementById('pitchVal').textContent = e.target.value
+      );
+      document.getElementById('tempo').addEventListener('input', e =>
+        document.getElementById('tempoVal').textContent = parseFloat(e.target.value).toFixed(1)
+      );
+    
+      // ===== Drag & Drop + Click to select file =====
+      const dropZone  = document.getElementById('dropZone');
+      const fileInput = document.getElementById('audioFile');
+    
+      dropZone.addEventListener('click', () => fileInput.click());
+      ['dragenter','dragover'].forEach(evt =>
+        dropZone.addEventListener(evt, e => {
+          e.preventDefault();
+          dropZone.classList.add('dragover');
+        })
+      );
+      ['dragleave','drop'].forEach(evt =>
+        dropZone.addEventListener(evt, e => {
+          e.preventDefault();
+          dropZone.classList.remove('dragover');
+          if (evt === 'drop') {
+            fileInput.files = e.dataTransfer.files;
+            fileInput.dispatchEvent(new Event('change'));
+          }
+        })
+      );
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+          dropZone.querySelector('.mt-2').textContent = fileInput.files[0].name;
+        }
+      });
+    
+      // ===== Upload with Fake Progress Bar =====
+      const form              = document.getElementById('audioForm');
+      const submitBtn         = document.getElementById('processBtn');
+      const progressContainer = document.getElementById('progressContainer');
+      const progressBar       = document.getElementById('uploadProgress');
+      // Prepare alert container
+      const alertContainer    = document.createElement('div');
+      alertContainer.className = 'container mt-3';
+      document.querySelector('main').prepend(alertContainer);
+    
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+    
+        // Reset UI
+        submitBtn.disabled = true;
+        alertContainer.innerHTML = '';
+        progressContainer.classList.remove('d-none');
+        progressBar.style.width = '0%';
+        progressBar.textContent = '0%';
+    
+        // Start fake progress
+        let fake = 0;
+        const fakeInterval = setInterval(() => {
+          if (fake < 90) {
+            fake += Math.random() * 15;    // advance by up to 15%
+            fake = Math.min(fake, 90);
+            const pct = Math.floor(fake);
+            progressBar.style.width = pct + '%';
+            progressBar.textContent = pct + '%';
+          }
+        }, 300);
+    
+        try {
+          const response = await fetch(form.action, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: new FormData(form)
+          });
+    
+          clearInterval(fakeInterval);
+          // Complete the bar
+          progressBar.style.width = '100%';
+          progressBar.textContent = '100%';
+    
+          if (!response.ok) {
+            const text = await response.text();
+            throw new Error(`Status ${response.status}: ${text}`);
+          }
+    
+          const json = await response.json();
+          const file = encodeURIComponent(json.file);
+          window.location.href = `{{ url_for('preview') }}?file=${file}`;
+    
+        } catch (err) {
+          clearInterval(fakeInterval);
+          submitBtn.disabled = false;
+          progressContainer.classList.add('d-none');
+    
+          const alert = document.createElement('div');
+          alert.className = 'alert alert-danger alert-dismissible fade show';
+          alert.innerHTML = `
+            <strong>Erro!</strong> ${err.message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          `;
+          alertContainer.prepend(alert);
+        }
+      });
+    });
+    </script>  
+    
+
+</body>
+</html>
